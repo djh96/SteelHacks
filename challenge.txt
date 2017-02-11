@@ -1,0 +1,16 @@
+				BufferedReader wl = new BufferedReader(new FileReader("wordlist.txt"));										
+				String line = wl.readLine();
+				String codeWord;
+				while(!(line.startsWith(soFar)) && wl.readLine() != null)
+				{
+					line = wl.readLine();
+				}
+				if(wl.readLine() == null) 
+				{
+					System.out.println("You caught me!");
+				}
+				else
+				{
+					codeWord = line;
+					System.out.println("I was thinking of the word " + codeWord);
+				}
