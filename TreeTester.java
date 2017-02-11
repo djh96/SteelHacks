@@ -174,6 +174,16 @@ public class Ghost implements Speechlet
 				next = x;
 			}
 
+			public void setEnd(boolean x)
+			{
+				end = x;
+			}
+
+			public boolean getEnd()
+			{
+				return end;
+			}
+
 			public void setChild(Node x)
 			{
 				child = x;
