@@ -13,4 +13,8 @@
 				{
 					codeWord = line;
 					System.out.println("I was thinking of the word " + codeWord);
+<<<<<<< HEAD
 				}
+=======
+				}
+>>>>>>> 4f5cbcec45efc83b9256ed86d35ff458b42f3bad

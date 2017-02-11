@@ -13,9 +13,12 @@ import com.amazon.speech.speechlet.SpeechletResponse;
 import com.amazon.speech.ui.PlainTextOutputSpeech;
 import com.amazon.speech.ui.Reprompt;
 import com.amazon.speech.ui.SimpleCard;
+import Java.lang.Math.random()
 
 public class Ghost implements Speechlet
 {
+	public static ArrayList<String> words = new ArrayList<String>();
+
 	Tree dict = new Tree();
 	String soFar;
 	@Override
@@ -71,7 +74,40 @@ public class Ghost implements Speechlet
 		        {
 		            throw new SpeechletException("Invalid Intent");
 		        }
+
+		        BufferedReader br = new BufferedReader(new FileReader("usableWords.txt"));
+		        String soFar = br.readLine();
+
+		        try {
+				StringBuilder sb = new StringBuilder();
+				//String line = br.readLine();
+
+				while (line != null) {
+				    line = br.readLine();
+				    if(line.equals(soFar)) 
+				    {
+				    	terminate();
+				    }
+				}
+				} finally {
+				    br.close();
+				}
+				int possible = 0
+				for(int i = 0; i <soFar.length; i++) 
+				{
+					Node cur = new Node();
+					cur.getChild();
+					while(cur.getNext() != null)
+					{
+						possible++;
+					}
+					Random rand = new Random();
+
+					int  n = rand.nextInt(possible) + 1;
+				}
     		}
+    	public void terminate()
+    	{}
 	}
 
 	public static class Tree
@@ -166,6 +202,15 @@ public class Ghost implements Speechlet
 			public String getLetter()
 			{
 				return letter;
+			}
+			public void setEnd(boolean x)
+			{
+				end = x;
+			}
+
+			public boolean getEnd()
+			{
+				return end;
 			}
 
 		}
