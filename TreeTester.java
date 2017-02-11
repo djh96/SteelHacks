@@ -7,7 +7,7 @@ public class TreeTester
 		Tree dict = new Tree();
 		try
 		{
-			BufferedReader br = new BufferedReader(new FileReader("wordlist.txt"));
+			BufferedReader br = new BufferedReader(new FileReader("usableWords.txt"));
 			String line = br.readLine();
 			while(line != null)
 			{
