@@ -1,4 +1,5 @@
 import java.io.*;
+import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.amazon.speech.slu.Intent;
@@ -12,6 +13,8 @@ import com.amazon.speech.speechlet.SpeechletException;
 import com.amazon.speech.speechlet.SpeechletResponse;
 import com.amazon.speech.ui.PlainTextOutputSpeech;
 import com.amazon.speech.ui.Reprompt;
+import com.amazonaws.services.s3.*;
+import com.amazonaws.services.s3.model.*;
 
 public class Ghost implements Speechlet
 {
@@ -20,6 +23,7 @@ public class Ghost implements Speechlet
 	int numPlay;
 	int where;
 	String goFor;
+	Node cur;
 	@Override
 	public void onSessionStarted(final SessionStartedRequest request, final Session session)
     throws SpeechletException
@@ -29,14 +33,17 @@ public class Ghost implements Speechlet
         soFar = "";
 		try
 		{
-			BufferedReader br = new BufferedReader(new FileReader("usableWords.txt"));
+			AmazonS3 client = new AmazonS3Client();
+			S3Object xFile = client.getObject("ghostword", "useableWords.txt");
+			InputStream contents = xFile.getObjectContent();
+			BufferedReader br = new BufferedReader(new InputStreamReader(contents));
 			String line = br.readLine();
 			while(line != null)
 			{
 				dict.add(line);
 				line = br.readLine();
 			}
-			br.close;
+			br.close();
 		}
 		catch(IOException e)
 		{
@@ -64,11 +71,14 @@ public class Ghost implements Speechlet
             String letter = intent.getSlot("letter").getValue();
             try
 			{
+				AmazonS3 client = new AmazonS3Client();
+				S3Object xFile = client.getObject("ghostword", "usableWords.txt");
+				InputStream contents = xFile.getObjectContent();
 				soFar = soFar + letter;
 				if(where != 1)
 				{
 					where--;
-					BufferedReader bro = new BufferedReader(new FileReader("usableWords.txt"))
+					BufferedReader bro = new BufferedReader(new InputStreamReader(contents));
 					String line = bro.readLine();
 					while (line != null)
 					{
@@ -83,8 +93,8 @@ public class Ghost implements Speechlet
 				}
 				else if(where-1 == 0)
 				{
-					where = numPlay
-			        BufferedReader bro = new BufferedReader(new FileReader("usableWords.txt"))
+					where = numPlay;
+			        BufferedReader bro = new BufferedReader(new InputStreamReader(contents));
 					String line = bro.readLine();
 					while (line != null)
 					{
@@ -95,7 +105,7 @@ public class Ghost implements Speechlet
 					    }
 					}
 					bro.close();
-					Node cur = dict.root;
+					cur = dict.root;
 					for(int i = 0; i < soFar.length(); i++) 
 					{
 						cur = cur.getChild();
@@ -111,12 +121,12 @@ public class Ghost implements Speechlet
 					ArrayList<String> goodLetters = new ArrayList<String>();
 					ArrayList<String> allLetters = new ArrayList<String>();
 					String play;
-					allLetters.add(new String(a)); allLetters.add(new String(b)); allLetters.add(new String(c)); allLetters.add(new String(d)); 
-					allLetters.add(new String(e)); allLetters.add(new String(f)); allLetters.add(new String(g)); allLetters.add(new String(h));
-					allLetters.add(new String(i)); allLetters.add(new String(k)); allLetters.add(new String(l)); allLetters.add(new String(m));
-					allLetters.add(new String(n)); allLetters.add(new String(l)); allLetters.add(new String(o)); allLetters.add(new String(p));
-					allLetters.add(new String(r)); allLetters.add(new String(s)); allLetters.add(new String(t)); allLetters.add(new String(u)); 
-					allLetters.add(new String(v)); allLetters.add(new String(w)); allLetters.add(new String(y)); 
+					allLetters.add(new String("a")); allLetters.add(new String("b")); allLetters.add(new String("c")); allLetters.add(new String("d")); 
+					allLetters.add(new String("e")); allLetters.add(new String("f")); allLetters.add(new String("g")); allLetters.add(new String("h"));
+					allLetters.add(new String("i")); allLetters.add(new String("k")); allLetters.add(new String("l")); allLetters.add(new String("m"));
+					allLetters.add(new String("n")); allLetters.add(new String("l")); allLetters.add(new String("o")); allLetters.add(new String("p"));
+					allLetters.add(new String("r")); allLetters.add(new String("s")); allLetters.add(new String("t")); allLetters.add(new String("u")); 
+					allLetters.add(new String("v")); allLetters.add(new String("w")); allLetters.add(new String("y")); 
 
 					cur = cur.getChild();
 					while(cur.getNext() != null)
@@ -160,27 +170,37 @@ public class Ghost implements Speechlet
 		}
 		else if ("ChallengeIntent".equals(intentName))
 		{
-			try
+			if(where == numPlay)
 			{
-				BufferedReader wl = new BufferedReader(new FileReader("wordlist.txt"));										
-				String line = wl.readLine();
-				while(!(line.startsWith(soFar)) && wl.readLine() != null)
+				try
 				{
-					line = wl.readLine();
+					AmazonS3 client = new AmazonS3Client();
+					S3Object xFile = client.getObject("ghostword", "wordlist.txt");
+					InputStream contents = xFile.getObjectContent();
+					BufferedReader wl = new BufferedReader(new InputStreamReader(contents));										
+					String line = wl.readLine();
+					while(!(line.startsWith(soFar)) && wl.readLine() != null)
+					{
+						line = wl.readLine();
+					}
+					wl.close();
+					if(line == null) 
+					{
+						return getLoseResponse();
+					}
+					else
+					{
+						goFor = line;
+						return getWinResponse();
+					}
 				}
-				w1.close();
-				if(line == null) 
-				{
-					return getLoseResponse();
-				}
-				else
-				{
-					goFor = line;
-					return getWinResponse();
-				}
+				catch(IOException e)
+				{}
 			}
-			catch(IOException e)
-			{}
+			else
+			{
+				return getSpecialEndResponse();
+			}
 		}
 		else if ("NumberIntent".equals(intentName))
 		{
@@ -190,6 +210,14 @@ public class Ghost implements Speechlet
 			return getBeginResponse();
 
 		}
+		else if ("AMAZON.CancelIntent".equals(intentName))
+		{
+			return getEndResponse();
+		}
+		else if ("AMAZON.StopIntent".equals(intentName))
+		{
+			return getEndResponse();
+		}
 	    else if ("AMAZON.HelpIntent".equals(intentName))
         {
             return getHelpResponse();
@@ -198,6 +226,22 @@ public class Ghost implements Speechlet
         {
             throw new SpeechletException("Invalid Intent");
         }
+	}
+
+	private SpeechletResponse getSpecialEndResponse()
+	{
+		String x = "a challenge has been issued, thanks for playing";
+		PLainTextOutputSpeech y = new PLainTextOUtputSpeech();
+		y.setText(x);
+		return SpeechletResponse.newTellResponse(y);
+	}
+
+	private SpeechletResponse getEndResponse()
+	{
+		String x = "thanks for playing, you quitter";
+		PLainTextOutputSpeech y = new PLainTextOUtputSpeech();
+		y.setText(x);
+		return SpeechletResponse.newTellResponse(y);
 	}
 
 	private SpeechletResponse getBeginResponse()
@@ -212,7 +256,7 @@ public class Ghost implements Speechlet
 
 	private SpeechletResponse getWelcomeResponse()
 	{
-		String x = "how many players are playing?"
+		String x = "how many players are playing?";
 		PlainTextOutputSpeech y = new PLainTextOutputSpeech();
 		y.setText(x);
 		Reprompt z = new Reprompt();
@@ -236,7 +280,7 @@ public class Ghost implements Speechlet
 		for(int i=0; i<soFar.length(); i++)
 		{
 			if(i==0)
-				x = soFar.charAt(0);
+				x = "" + soFar.charAt(0);
 			x = x + ", " + soFar.charAt(i);
 		}
 		String a = x + ", please say the next letter";
@@ -271,7 +315,7 @@ public class Ghost implements Speechlet
 		PlainTextOutputSpeech y = new PlainTextOutputSpeech();
 		y.setText(x);
 		PLainTextOutputSpeech a = new PLainTextOutputSpeech();
-		a.setText("I said the letter, " + x)
+		a.setText("I said the letter, " + x);
 		Reprompt z = new Reprompt();
 		z.setOutputSpeech(a);
 		return SpeechletRespons.newAskResponse(y, z);
@@ -293,7 +337,7 @@ public class Ghost implements Speechlet
 		return SpeechletResponse.newTellResponse(y);
 	}
 
-	public static class Tree
+	class Tree
 	{
 		Node root;
 
@@ -334,7 +378,7 @@ public class Ghost implements Speechlet
 
 
 
-		public class Node
+		class Node
 		{
 			String letter;
 			boolean end;
